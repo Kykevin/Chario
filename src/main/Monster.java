@@ -27,10 +27,26 @@ public class Monster extends Sprite {
 		getImageDimensions();
 	}
 
-	public void move() {
+	public void move(int [][] mapTileTypes) {
 		if (isActive){
+			boolean pos[];
 			x += vx;
+			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+			if (pos[HitBoxManager.LEFT] == false || pos[HitBoxManager.RIGHT] == false){
+				x -= vx;
+			}
 			y += vy;
+			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+			if (pos[HitBoxManager.UP] == false || pos[HitBoxManager.DOWN] == false){
+				y -= vy;
+			}
+			vy += MainScreen.GRAVITY;
+			y += 1;
+			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+			if (pos[HitBoxManager.DOWN] == false){
+					vy = 0;
+			}
+			y -= 1;
 			if (shootingTimer % SHOOTINGDELAY == 0){
 				fire();
 			}
@@ -52,6 +68,8 @@ public class Monster extends Sprite {
 
 
 	public void fire() {
+		SoundPlayer.getInstance().play("monsShoot");
+
 		missiles.add(new Missile(x - 67, y + height / 2 - 40,1));
 	}
 

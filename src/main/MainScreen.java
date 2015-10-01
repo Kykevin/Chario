@@ -3,12 +3,14 @@ package main;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.sound.sampled.AudioFormat;
 import javax.swing.JFrame;
 
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
 
 
 public class MainScreen extends JPanel implements ActionListener {
@@ -21,6 +23,10 @@ public class MainScreen extends JPanel implements ActionListener {
 	MONSTER = 5,
 	NONE = 0;
 
+
+
+    public static final double GRAVITY = 0.13;
+	
 	private final int INITCHAR_X = 100;
 	private final int INITCHAR_Y = 300;
 	private final int DELAY = 10;
@@ -32,6 +38,8 @@ public class MainScreen extends JPanel implements ActionListener {
 	private boolean mapTileDrawed[][] = new boolean [6][1000];
 	int camOffset = 0;
 
+
+	
 	public MainScreen(){
 		initUI();
 		//default map
@@ -80,6 +88,7 @@ public class MainScreen extends JPanel implements ActionListener {
 
 		timer = new Timer(DELAY, this);
 		timer.start();
+		
 	}
 
 	private void initTiles(){
@@ -157,7 +166,6 @@ public class MainScreen extends JPanel implements ActionListener {
 	private void checkHits(){
 		//char shoot monster
 		ArrayList<Missile> charMissiles = character.getMissiles();
-
 		for (Missile currMissile : charMissiles) {
 			for (int i = 0; i < monsters.size(); i++){
 				Monster currMonster = monsters.get(i); 
@@ -165,6 +173,7 @@ public class MainScreen extends JPanel implements ActionListener {
 					monsters.remove(i);
 					currMissile.vis = false;
 					//play monster die sound
+					SoundPlayer.getInstance().play("monsDie");
 				}
 			}
 		}
@@ -176,6 +185,7 @@ public class MainScreen extends JPanel implements ActionListener {
 				if (HitBoxManager.checkHitBetween(currMissile, character)){
 					//Char.shotByMissile();
 					//play char get shot sound;
+					SoundPlayer.getInstance().play("charShot");
 					currMissile.vis = false;
 				}
 			}
@@ -184,6 +194,7 @@ public class MainScreen extends JPanel implements ActionListener {
 				//Char.die();
 				character.vis = false;
 				//play char died sound.
+				SoundPlayer.getInstance().play("charDie");
 			}
 		}
 		
@@ -251,7 +262,7 @@ public class MainScreen extends JPanel implements ActionListener {
 		for (Monster currMonster : monsters){
 			currMonster.camOffset = camOffset;
 			if (currMonster.x - character.x < 450 || currMonster.activeTimer != 0){
-					currMonster.move();
+					currMonster.move(mapTileTypes);
 			}
 
 			ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
@@ -279,9 +290,8 @@ public class MainScreen extends JPanel implements ActionListener {
 			character.keyPressed(e);
 		}
 	}
-
-
-
+	
+	
 	public static void main(final String s[]) {
 		EventQueue.invokeLater(new Runnable(){
 			public void run(){

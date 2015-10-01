@@ -65,7 +65,7 @@ public class Char extends Sprite {
 		if (pos[HitBoxManager.UP] == false || pos[HitBoxManager.DOWN] == false){
 			y -= vy;
 		}
-		vy += 0.13;
+		vy += MainScreen.GRAVITY;
 		y += 1;
 		pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
 		if (pos[HitBoxManager.DOWN] == false){
@@ -115,6 +115,7 @@ public class Char extends Sprite {
 	}
 
 	public void fire() {
+		SoundPlayer.getInstance().play("charShoot");
 		missiles.add(new Missile(x + width, y + height / 2 - 20,0));
 	}
 
