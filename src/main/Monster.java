@@ -5,18 +5,19 @@ import java.util.ArrayList;
 
 public class Monster extends Sprite {
 
-	private int vx;
+	private int vx = -1;
 	private int vy;
 	private ArrayList<Missile> missiles;
-	private boolean isActive;
+	private boolean isActive = false;
 	private final int SHOOTINGDELAY = 100;
 	private final int ACTIVEDELAY = 50;
 	public int activeTimer = 0;
 	private int shootingTimer = 0;
+	private int initCharX;
 
-	public Monster(int x, int y) {
+	public Monster(int x, int y, int charX) {
 		super(x, y);
-
+		initCharX = charX;
 		initMonster();
 	}
 
@@ -27,7 +28,10 @@ public class Monster extends Sprite {
 		getImageDimensions();
 	}
 
-	public void move(int [][] mapTileTypes) {
+	public void move(char [][] mapTileTypes, int charX) {
+		if (charX - initCharX >= 100 || charX - initCharX <= -100){
+			isActive = true;
+		}
 		if (isActive){
 			boolean pos[];
 			x += vx;
@@ -56,7 +60,6 @@ public class Monster extends Sprite {
 			activeTimer++;
 			if (activeTimer == ACTIVEDELAY){
 				isActive = true;
-				vx = -1;
 			}
 		}
 
@@ -70,7 +73,7 @@ public class Monster extends Sprite {
 	public void fire() {
 		SoundPlayer.getInstance().play("monsShoot");
 
-		missiles.add(new Missile(x - 67, y + height / 2 - 40,1));
+		missiles.add(new Missile(x - 67, y + height / 2 - 20,1));
 	}
 
 

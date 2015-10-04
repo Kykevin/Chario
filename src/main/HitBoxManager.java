@@ -7,7 +7,7 @@ public class HitBoxManager {
 	public HitBoxManager(){
 
 	}
-	public static boolean[] checkPosition(int [][] mapTileTypes, 
+	public static boolean[] checkPosition(char [][] mapTileTypes, 
 			int camOffset, Sprite object){
 		boolean rts[] = new boolean [4];
 		rts[0] = true;
@@ -18,34 +18,47 @@ public class HitBoxManager {
 				y = object.y,
 				width = object.width,
 				height = object.height;
-		final int left = x / 100,
-				up = y / 100,
-				right = (x + width) / 100 - ((x + width) % 100 == 0 ? 1 : 0),
-				down = (y + height) / 100 - ((y + height) % 100 == 0 ? 1 : 0);
+		final int left = x / 50,
+				up = y / 50,
+				right = (x + width) / 50 - ((x + width) % 50 == 0 ? 1 : 0),
+				down = (y + height) / 50 - ((y + height) % 50 == 0 ? 1 : 0);
 		//left
 		if (x < 0){
 			rts[LEFT] = false;
-		}
-		if (mapTileTypes[up][left] != 0 || mapTileTypes[down][left] != 0){
-			rts[LEFT] = false;
-		}
-
-		//right
-		if (mapTileTypes[up][right] != 0 || mapTileTypes[down][right] != 0){
-			rts[RIGHT] = false;
-		}
-
-		//up
-		if (y < 0){
 			rts[UP] = false;
-		}
-		if (mapTileTypes[up][left] != 0 || mapTileTypes[up][right] != 0){
-			rts[UP] = false;
-		}
-
-		//down
-		if (mapTileTypes[down][left] != 0 || mapTileTypes[down][right] != 0){
 			rts[DOWN] = false;
+			if (mapTileTypes[up][right] != ' ' || mapTileTypes[down][right] != ' '){
+				rts[RIGHT] = false;
+			}
+		}
+		else if (y < 0){
+			rts[UP] = false;
+			rts[LEFT] = false;
+			rts[RIGHT] = false;
+			if (mapTileTypes[down][left] != ' ' || mapTileTypes[down][right] != ' '){
+				rts[DOWN] = false;
+			}			
+		}
+		else {
+			//left
+			if (mapTileTypes[up][left] != ' ' || mapTileTypes[down][left] != ' '){
+				rts[LEFT] = false;
+			}
+
+			//right
+			if (mapTileTypes[up][right] != ' ' || mapTileTypes[down][right] != ' '){
+				rts[RIGHT] = false;
+			}
+
+			//up
+			if (mapTileTypes[up][left] != ' ' || mapTileTypes[up][right] != ' '){
+				rts[UP] = false;
+			}
+
+			//down
+			if (mapTileTypes[down][left] != ' ' || mapTileTypes[down][right] != ' '){
+				rts[DOWN] = false;
+			}			
 		}
 		return rts;
 	}

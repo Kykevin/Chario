@@ -1,14 +1,22 @@
 package main;
 
 public class Tile extends Sprite{
-
-	public Tile(int x,int y, int tileType, int camOffset){
+	public boolean gas = false;
+	public boolean explode = false;
+	
+	public Tile(int x,int y, char tileType, int camOffset){
 		super(x,y,camOffset);
 
 		initTile(tileType);
 	}
 
-	private void initTile(int tileType){
+	private void initTile(char tileType){
+		if(tileType == 'E'){
+			explode = true;
+		}		
+		if(tileType == 'G'){
+			gas = true;
+		}
 		loadImage("images/tile"+tileType+".png");
 		getImageDimensions();
 	}

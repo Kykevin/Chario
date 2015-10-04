@@ -17,8 +17,15 @@ public class Char extends Sprite {
 	private final int SHOOTINGDELAY = 50;
 	private final int ONESEC = 100;
 	private int shootingTimer = 0;
+
+	public int invulnerableTimer = 0;
+	private int gasTimer = 0;
+
 	private boolean lefting = false;
 	private boolean righting = false;
+
+	private int motionTimer = 0;
+	private int stayTimer = 0;
 	public int health = 20;
 	private final int HEALTHCAP = 40; 
 
@@ -36,56 +43,110 @@ public class Char extends Sprite {
 		getImageDimensions();
 	}
 
-	public void move(int [][] mapTileTypes, int camOffset) {
-		boolean pos[];
-		if(shooting){
-			if (shootingTimer % (SHOOTINGDELAY * 10 + ONESEC) % SHOOTINGDELAY
-					== 0 &&	shootingTimer % (SHOOTINGDELAY * 10 + ONESEC)
-					< SHOOTINGDELAY * 10){
-				fire();
+	public void move(char [][] mapTileTypes, int camOffset) {
+		if (health >= HEALTHCAP){
+			health = HEALTHCAP;
+		}
+		if (health != 0){
+
+			if(invulnerableTimer > 0){
+				invulnerableTimer --;
 			}
-			shootingTimer++;
-		}
-		if (lefting && !righting){
-			vx = -4;
-		}
-		else if (righting && !lefting){
-			vx = 4;
-		}
-		else {
-			vx = 0;
-		}
-		x += vx;
-		pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-		if (pos[HitBoxManager.LEFT] == false || pos[HitBoxManager.RIGHT] == false){
-			x -= vx;
-		}
-		y += vy;
-		pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-		if (pos[HitBoxManager.UP] == false || pos[HitBoxManager.DOWN] == false){
-			y -= vy;
-		}
-		vy += MainScreen.GRAVITY;
-		y += 1;
-		pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-		if (pos[HitBoxManager.DOWN] == false){
-			onGround = true;
-			if(jumping){
-				vy = -5;
+			if(gasTimer > 0){
+				gasTimer --;
 			}
 			else{
-				vy = 0;
+				if(shooting){
+					if (shootingTimer % (SHOOTINGDELAY * 10 + ONESEC) % SHOOTINGDELAY
+							== 0 &&	shootingTimer % (SHOOTINGDELAY * 10 + ONESEC)
+							< SHOOTINGDELAY * 10){
+						fire();
+					}
+					shootingTimer++;
+				}
 			}
-		}
-		else {
-			onGround = false;
-		}
-		y -= 1;
-		if (x - camOffset < 100 && camOffset + vx >= 0 && lefting){
-			this.camOffset += vx;
-		}
-		if (x - camOffset > 250 && righting){
-			this.camOffset += vx;
+			boolean pos[];
+			if (!lefting && !righting && onGround){
+				stayTimer++;
+				motionTimer = 0;
+			}
+			else {
+
+				motionTimer++;
+				stayTimer = 0;			}
+			if ((stayTimer+1) % 100 == 0){
+				health += 5;
+			}
+			if ((motionTimer+1) % 19 == 0){
+				health += 1;
+			}
+			if (health >= HEALTHCAP){
+				health = HEALTHCAP;
+			}
+
+			if (lefting && !righting){
+				vx = -3;
+			}
+			else if (righting && !lefting){
+				vx = 3;
+			}
+			else {
+				vx = 0;
+			}
+			x += vx;
+			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+			if (pos[HitBoxManager.LEFT] == false){
+				if (x < 0){
+					x = 0;
+				}
+				else {
+					x = (x/50+1)*50;
+				}
+			}
+			if(pos[HitBoxManager.RIGHT] == false){
+				x = x/50*50;
+			}
+
+			vy += MainScreen.GRAVITY;
+			int t = y;
+			y += vy;
+			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+			if(pos[HitBoxManager.DOWN] == false){
+				y = y/50*50;
+				onGround = true;
+				if(jumping){
+					vy = -6.8;
+				}
+				else{
+					vy = 0;
+				}
+				final int left = x / 50,
+						right = (x + width) / 50 - ((x + width) % 50 == 0 ? 1 : 0),
+						down = (y + height) / 50;
+				if(mapTileTypes[down][left] == 'G' || mapTileTypes[down][right] == 'G'){
+					gasTimer = 100;
+				}			
+			}
+			else {
+				onGround = false;
+			}
+			if(pos[HitBoxManager.UP] == false){
+				if (y < 0){
+					y = 0;
+				}
+				else {
+					y = (y/50+1)*50;
+				}
+			}
+			if (pos[HitBoxManager.UP] == false && vy <= 0){
+				vy = 0;			
+			}
+			if (x - camOffset < 100 && camOffset + vx >= 0 && lefting){
+				this.camOffset += vx;
+			}
+			if (x - camOffset > 250 && righting){
+				this.camOffset += vx;
+			}
 		}
 	}
 
@@ -139,3 +200,20 @@ public class Char extends Sprite {
 	}
 }
 
+
+//y += 1;
+//			System.out.println(vy + " " + pos[HitBoxManager.UP]);
+//pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+//			if (pos[HitBoxManager.DOWN] == false){
+//				onGround = true;
+//				if(jumping){
+//					vy = -6.8;
+//				}
+//				else{
+//					vy = 0;
+//				}
+//			}
+//			else {
+//				onGround = false;
+//			}
+//y -= 1;

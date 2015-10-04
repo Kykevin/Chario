@@ -9,55 +9,78 @@ import javax.swing.JFrame;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.Timer;
 
 
 
 public class MainScreen extends JPanel implements ActionListener {
 
-	private final int 
-	NORMALTOP = 1,
-	NORMAL = 2,
-	EXPLODING = 3,
-	GAS = 4,
-	MONSTER = 5,
-	NONE = 0;
+	private final char 
+	NORMALTOP = 'T',
+	NORMAL = 'N',
+	EXPLODING = 'E',
+	EXPLODED = 'D',
+	GAS = 'G',
+	MONSTER = 'M',
+	MUSHROOM = 'R',
+	STAR = 'S',
+	NONE = ' ';
 
 
 
-    public static final double GRAVITY = 0.13;
-	
+	public static final double GRAVITY = 0.13;
+
 	private final int INITCHAR_X = 100;
-	private final int INITCHAR_Y = 300;
+	private final int INITCHAR_Y = 450;
 	private final int DELAY = 10;
 	private Timer timer;
 	private Char character;
 	private ArrayList<Monster> monsters;
 	private ArrayList<Tile> mapTiles;
-	private int mapTileTypes[][] = new int [6][1000];
-	private boolean mapTileDrawed[][] = new boolean [6][1000];
+	private ArrayList<PowerUp> powerUps; 
+	private char mapTileTypes[][] = new char [12][1000];
+	private boolean mapTileDrawed[][] = new boolean [12][1000];
 	int camOffset = 0;
+	boolean died = false;
 
+	private JLabel health = new JLabel();
+	private JLabel dieMsg = new JLabel("R.I.P.");
 
-	
 	public MainScreen(){
 		initUI();
 		//default map
 		int column, row;
-		for(column = 0;column < 100;++column){
-			for(row = 0; row < 6;++row){
-				if (row == 4 && column % 10 == 9){
+		for(column = 0;column < 1000;++column){
+			for(row = 0; row < 12;++row){
+				if (row == 9 && column % 10 == 9){
 					mapTileTypes[row][column] = MONSTER;
 				}
-				else if (row == 5){
+				else if (row == 11){
+					mapTileTypes[row][column] = NORMAL;
+				}
+				else if (row == 10){
 					mapTileTypes[row][column] = NORMALTOP;
 				}
-				else if (row == 4 && column % 10 == 5){
+				else if (row == 9 && column % 10 == 5){
+					mapTileTypes[row][column] = STAR;
+				}
+				else if (row == 4 && column % 10 == 7){
+					mapTileTypes[row][column] = MUSHROOM;
+				}
+				else if (row == 6 && column % 10 == 5){
 					mapTileTypes[row][column] = NORMALTOP;
 				}
 				else {
 					mapTileTypes[row][column] = NONE;
 				}
+				if (row == 10 && column % 10 == 3){
+					mapTileTypes[row][column] = EXPLODING;
+				}
+				if (row == 10 && column % 10 == 8){
+					mapTileTypes[row][column] = GAS;
+				}
+				
 			}
 		}
 		initTiles();
@@ -71,9 +94,16 @@ public class MainScreen extends JPanel implements ActionListener {
 	private void initUI(){
 		JFrame screen = new JFrame("My Game");
 
+
+
 		screen.add(this);
 
-		screen.setSize(800, 630);
+		screen.setSize(800, 630);    
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		Dimension screenSize = tk.getScreenSize();
+		int screenHeight = screenSize.height;
+		int screenWidth = screenSize.width;
+		setLocation((screenWidth-800) / 2, (screenHeight-600) / 2);
 		screen.setLocationRelativeTo(null);
 		screen.setResizable(false);
 		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -85,32 +115,48 @@ public class MainScreen extends JPanel implements ActionListener {
 		setDoubleBuffered(true);
 
 		character = new Char(INITCHAR_X, INITCHAR_Y);
-
+		this.setLayout(null);
 		timer = new Timer(DELAY, this);
 		timer.start();
-		
+
+		health.setBounds(300, 0, 200, 50);
+		health.setHorizontalAlignment(JLabel.CENTER);
+		health.setFont(new Font("Verdana",1,20));
+		health.setForeground(Color.white);
+		health.setText("Health: "+character.health);
+		this.add(health);
+		dieMsg.setBounds(0, 0, 800, 600);
+		dieMsg.setHorizontalAlignment(JLabel.CENTER);
+		dieMsg.setFont(new Font("Verdana",1,200));
+		dieMsg.setForeground(Color.white);
 	}
 
 	private void initTiles(){
 		mapTiles = new ArrayList<Tile>();
 		monsters = new ArrayList<Monster>();
+		powerUps = new ArrayList<PowerUp>();
 		int row,column;
-		for(row = 0;row < 6;++row){
-			for(column = 0;column < 10;++column){
+		for(row = 0;row < 12;++row){
+			for(column = 0;column < 20;++column){
 				mapTileDrawed[row][column] = true;
-				if (mapTileTypes[row][column] != MONSTER && mapTileTypes[row][column] != NONE){
-					Tile tempTile = new Tile(column * 100,
-							row * 100, mapTileTypes[row][column],camOffset);
-					mapTiles.add(tempTile);
-					mapTileDrawed[row][column] = true;
-				}
-				else if (mapTileTypes[row][column] == MONSTER) {
-					Monster tempMonster = new Monster(column * 100,
-							row * 100);
+				if (mapTileTypes[row][column] == MONSTER) {
+					Monster tempMonster = new Monster(column * 50,
+							row * 50,character.x);
 					mapTileTypes[row][column] = NONE;
-					mapTileDrawed[row][column] = true;
 					monsters.add(tempMonster);
 				}
+				else if(mapTileTypes[row][column] == STAR || mapTileTypes[row][column] == MUSHROOM){
+					PowerUp tempPU = new PowerUp(column * 50,
+							row * 50, character.camOffset, mapTileTypes[row][column]);
+					mapTileTypes[row][column] = NONE;
+					powerUps.add(tempPU);
+				}
+				else if (mapTileTypes[row][column] != NONE){
+					Tile tempTile = new Tile(column * 50,
+							row * 50, mapTileTypes[row][column],camOffset);
+					mapTiles.add(tempTile);
+				}
+
 			}
 		}
 	}
@@ -151,15 +197,21 @@ public class MainScreen extends JPanel implements ActionListener {
 			}
 		}
 
+		for (PowerUp currPowerUp : powerUps){
+			g2d.drawImage(currPowerUp.getImage(), currPowerUp.getX(),
+					currPowerUp.getY(), this);
+		}
+
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		checkHits();
-		
+
 		updateMissiles();
 		updateChar();
 		updateTiles();
 		updateMonsters();
+		updatePowerUps();
 		repaint();
 	}
 
@@ -173,6 +225,7 @@ public class MainScreen extends JPanel implements ActionListener {
 					monsters.remove(i);
 					currMissile.vis = false;
 					//play monster die sound
+					character.health += 10;
 					SoundPlayer.getInstance().play("monsDie");
 				}
 			}
@@ -180,33 +233,107 @@ public class MainScreen extends JPanel implements ActionListener {
 
 		//monster shoot char
 		for (Monster currMonster : monsters){
-			ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
-			for (Missile currMissile : monsterMissiles) {
-				if (HitBoxManager.checkHitBetween(currMissile, character)){
-					//Char.shotByMissile();
-					//play char get shot sound;
-					SoundPlayer.getInstance().play("charShot");
-					currMissile.vis = false;
+			if (character.invulnerableTimer == 0){
+				ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
+				for (Missile currMissile : monsterMissiles) {
+					if (HitBoxManager.checkHitBetween(currMissile, character)){
+						//Char.shotByMissile();
+						//play char get shot sound;
+						if (died == false){
+							SoundPlayer.getInstance().play("charShot");
+						}
+						currMissile.vis = false;
+						character.health -= 5;
+						if (character.health <= 0) {
+							character.health = 0;
+							if (died == false){
+								SoundPlayer.getInstance().play("charDie");
+								died = true;
+								this.add(dieMsg);
+							}
+						}
+					}
 				}
-			}
+			}			
 			//char hit monster
 			if(HitBoxManager.checkHitBetween(currMonster, character)){
 				//Char.die();
-				character.vis = false;
+
+				character.health = 0;
+
 				//play char died sound.
-				SoundPlayer.getInstance().play("charDie");
+				if (died == false){
+					SoundPlayer.getInstance().play("charDie");
+					died = true;
+					this.add(dieMsg);
+				}			
 			}
 		}
-		
+		for (int i = 0; i < powerUps.size(); i++){
+			PowerUp currPowerUp = powerUps.get(i); 
+			if (HitBoxManager.checkHitBetween(currPowerUp, character)){
+				currPowerUp.vis = false;
+				powerUps.remove(i);
+				if(currPowerUp.powerUpType == MUSHROOM){
+					character.health +=5;
+					SoundPlayer.getInstance().play("mush");
+				}
+				else if (currPowerUp.powerUpType == STAR){
+					character.invulnerableTimer = 100;
+					SoundPlayer.getInstance().play("star");
+				}
 
+			}
+		}
+		final int x = character.x,
+				y = character.y,
+				width = character.width,
+				height = character.height;
+		final int left = x / 50,
+				right = (x + width) / 50 - ((x + width) % 50 == 0 ? 1 : 0),
+				down = (y + height) / 50;
+		if(mapTileTypes[down][left] == EXPLODING)
+		{
+			mapTileTypes[down][left] = EXPLODED;
+			if (died == false){
+				SoundPlayer.getInstance().play("charShot");
+			}
+			character.health -= 10;
+			if (character.health <= 0) {
+				character.health = 0;
+				if (died == false){
+					SoundPlayer.getInstance().play("charDie");
+					died = true;
+					this.add(dieMsg);
+				}
+			}
+		}
+		if(mapTileTypes[down][right] == EXPLODING){
+			mapTileTypes[down][right] = EXPLODED;
+			if (died == false){
+				SoundPlayer.getInstance().play("charShot");
+			}
+			character.health -= 10;
+			if (character.health <= 0) {
+				character.health = 0;
+				if (died == false){
+					SoundPlayer.getInstance().play("charDie");
+					died = true;
+					this.add(dieMsg);
+				}
+			}
+		}	
 	}
-	
+
 	private void updateMissiles() {
 
 		ArrayList<Missile> charMissiles = character.getMissiles();
 
 		for (int i = 0; i < charMissiles.size(); i++) {
 			Missile currMissile = charMissiles.get(i);
+			boolean pos[] = HitBoxManager.checkPosition(mapTileTypes, camOffset, currMissile);
+			if (!pos[HitBoxManager.LEFT] || !pos[HitBoxManager.RIGHT])
+				currMissile.vis = false;
 			if (currMissile.isVisible()) {
 				currMissile.camOffset = camOffset;
 				currMissile.move();
@@ -219,6 +346,7 @@ public class MainScreen extends JPanel implements ActionListener {
 	private void updateChar() {
 		character.move(mapTileTypes, camOffset);
 		camOffset = character.getCamOffset();
+		health.setText("Health: "+character.health);
 	}
 
 	private void updateTiles() {
@@ -227,28 +355,38 @@ public class MainScreen extends JPanel implements ActionListener {
 			currTile.camOffset = camOffset;
 			currTile.update();
 			if (currTile.isVisible()) {
+
 			} else {
-				mapTileDrawed[currTile.y / 100][currTile.x / 100] = false;
+				mapTileDrawed[currTile.y / 50][currTile.x / 50] = false;
 				mapTiles.remove(i);
 			}
 		}
+
+
 		int row,column;
-		for(row = 0;row < 6;++row){
-			for(column = camOffset % 100 - 2;column < camOffset % 100 + 10;++column){
+		for(row = 0;row < 12;++row){
+			for(column = camOffset / 50 - 2;column < camOffset / 50 + 20;++column){
 				if(column >= 0){
 					if (mapTileDrawed[row][column] != true){
-						if (mapTileTypes[row][column] != MONSTER && mapTileTypes[row][column] != NONE){
-							Tile tempTile = new Tile(column * 100,
-									row * 100, mapTileTypes[row][column],camOffset);
-							mapTiles.add(tempTile);
-						}
-						else if (mapTileTypes[row][column] == MONSTER) {
-							Monster tempMonster = new Monster(column * 100,
-									row * 100);
+						mapTileDrawed[row][column] = true;
+						if (mapTileTypes[row][column] == MONSTER) {
+							Monster tempMonster = new Monster(column * 50,
+									row * 50,character.x);
 							mapTileTypes[row][column] = NONE;
 							monsters.add(tempMonster);
 						}
-						mapTileDrawed[row][column] = true;
+						else if(mapTileTypes[row][column] == STAR || mapTileTypes[row][column] == MUSHROOM){
+							PowerUp tempPU = new PowerUp(column * 50,
+									row * 50, character.camOffset, mapTileTypes[row][column]);
+							mapTileTypes[row][column] = NONE;
+							powerUps.add(tempPU);
+						}
+						else if (mapTileTypes[row][column] != NONE){
+							Tile tempTile = new Tile(column * 50,
+									row * 50, mapTileTypes[row][column],camOffset);
+							mapTiles.add(tempTile);
+						}
+
 					}
 				}
 			}
@@ -257,17 +395,20 @@ public class MainScreen extends JPanel implements ActionListener {
 	}
 
 	private void updateMonsters() {
-		
-		
+
+
 		for (Monster currMonster : monsters){
 			currMonster.camOffset = camOffset;
-			if (currMonster.x - character.x < 450 || currMonster.activeTimer != 0){
-					currMonster.move(mapTileTypes);
+			if (currMonster.x - character.x < 450){
+				currMonster.move(mapTileTypes,character.x);
 			}
 
 			ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
 			for (int j = 0; j < monsterMissiles.size(); j++) {
 				Missile currMissile = monsterMissiles.get(j);
+				boolean pos[] = HitBoxManager.checkPosition(mapTileTypes, camOffset, currMissile);
+				if (!pos[HitBoxManager.LEFT] || !pos[HitBoxManager.RIGHT])
+					currMissile.vis = false;
 				if (currMissile.isVisible()) {
 					currMissile.camOffset = camOffset;
 					currMissile.move();
@@ -275,6 +416,12 @@ public class MainScreen extends JPanel implements ActionListener {
 					monsterMissiles.remove(j);
 				}
 			}
+		}
+	}
+
+	private void updatePowerUps(){
+		for (PowerUp currPowerUp : powerUps){
+			currPowerUp.update(character.camOffset);
 		}
 	}
 
@@ -290,8 +437,8 @@ public class MainScreen extends JPanel implements ActionListener {
 			character.keyPressed(e);
 		}
 	}
-	
-	
+
+
 	public static void main(final String s[]) {
 		EventQueue.invokeLater(new Runnable(){
 			public void run(){
