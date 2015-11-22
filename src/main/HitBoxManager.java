@@ -63,42 +63,31 @@ public class HitBoxManager {
 		return rts;
 	}
 
-	public static boolean checkHitBetween(Sprite a, Sprite b){
-		if(pointInside(a.x, a.y, b)){
-			return true;
-		}
-		if(pointInside(a.x + a.width, a.y, b)){
-			return true;
-		}
-		if(pointInside(a.x, a.y + a.height, b)){
-			return true;
-		}
-		if(pointInside(a.x + a.width, a.y + a.height, b)){
-			return true;
-		}
-		if(pointInside(b.x, b.y, a)){
-			return true;
-		}
-		if(pointInside(b.x + b.width, b.y, a)){
-			return true;
-		}
-		if(pointInside(b.x, b.y + b.height, a)){
-			return true;
-		}
-		if(pointInside(b.x + b.width, b.y + b.height, a)){
+	public static boolean checkOnGround(char [][] mapTileTypes, 
+			int camOffset, Sprite object){
+		final int x = object.x,
+				y = object.y+1,
+				width = object.width,
+				height = object.height;
+		final int left = x / 50,
+				right = (x + width) / 50 - ((x + width) % 50 == 0 ? 1 : 0),
+				down = (y + height) / 50 - ((y + height) % 50 == 0 ? 1 : 0);
+		if (mapTileTypes[down][left] != ' ' || mapTileTypes[down][right] != ' '){
 			return true;
 		}
 		return false;
 	}
 
-	private static boolean pointInside(int x, int y, Sprite a){
-		final int up = a.y;
-		final int down = a.y + a.height;
-		final int left = a.x;
-		final int right = a.x + a.width;
-		if (x >= left && x <= right && y >= up && y <= down){
+	public static boolean checkHitBetween(Sprite a, Sprite b){
+		int centerXa = a.x + a.width/2;
+		int centerYa = a.y + a.height/2;
+		int centerXb = b.x + b.width/2;
+		int centerYb = b.y + b.height/2;
+//		System.out.println(Math.abs(centerXa - centerXb));
+		if(Math.abs(centerXa - centerXb) < a.width/2 + b.width/2 && Math.abs(centerYa - centerYb) < a.height/2+b.height/2){
 			return true;
 		}
-		return false;
+		else return false;
 	}
+
 }

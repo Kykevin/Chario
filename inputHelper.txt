@@ -1,0 +1,18 @@
+# Map file for tile-based game
+# There are 12 lines in total
+# There must be more than 30 columns (no specified requirment in pdf, 
+# so I just make a rule myself)
+# You have to have blocks on the last row
+# (Lines that start with '#' are comments)
+# The tiles are:
+#   (Space) Empty tile
+#   T       NormalTop (normal tile with grass on top
+#   N       Normal
+#   E       Exploding block
+#   G       Gas
+#   M       Monster
+#   R       Mushroom
+#   S       Star
+# the column number should be the same for each row. 
+# input.txt and input2.txt is designed for quick test for all features.
+# you can create your own file follow the rules.

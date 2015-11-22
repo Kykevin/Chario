@@ -1,23 +1,21 @@
 package main;
 
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class Monster extends Sprite {
 
 	private int vx = -1;
-	private int vy;
+	private double vy = 0;
 	private ArrayList<Missile> missiles;
 	private boolean isActive = false;
 	private final int SHOOTINGDELAY = 100;
 	private final int ACTIVEDELAY = 50;
 	public int activeTimer = 0;
 	private int shootingTimer = 0;
-	private int initCharX;
+	private int initCharX = 0;
 
-	public Monster(int x, int y, int charX) {
+	public Monster(int x, int y) {
 		super(x, y);
-		initCharX = charX;
 		initMonster();
 	}
 
@@ -29,40 +27,45 @@ public class Monster extends Sprite {
 	}
 
 	public void move(char [][] mapTileTypes, int charX) {
-		if (charX - initCharX >= 100 || charX - initCharX <= -100){
-			isActive = true;
+		//		System.out.println(activeTimer);
+		if(initCharX == 0){
+			if(this.getX() < 750)
+				initCharX = charX;
 		}
-		if (isActive){
-			boolean pos[];
-			x += vx;
-			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-			if (pos[HitBoxManager.LEFT] == false || pos[HitBoxManager.RIGHT] == false){
-				x -= vx;
+		else {
+			if (charX - initCharX >= 100 || charX - initCharX <= -100){
+				isActive = true;
 			}
+			if (isActive){
+				boolean pos[];
+				x += vx;
+				pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
+				if (pos[HitBoxManager.LEFT] == false || pos[HitBoxManager.RIGHT] == false){
+					x -= vx;
+				}
+				if (shootingTimer % SHOOTINGDELAY == 0){
+					fire();
+				}
+				shootingTimer++;
+			}
+			else if (this.getX() <= 750) {
+				activeTimer++;
+				if (activeTimer == ACTIVEDELAY){
+					isActive = true;
+				}
+			}
+			boolean pos[];
+			//		System.out.println(HitBoxManager.checkOnGround(mapTileTypes, camOffset, this));
 			y += vy;
 			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-			if (pos[HitBoxManager.UP] == false || pos[HitBoxManager.DOWN] == false){
+			if (pos[HitBoxManager.DOWN] == false){
 				y -= vy;
 			}
 			vy += MainScreen.GRAVITY;
-			y += 1;
-			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
-			if (pos[HitBoxManager.DOWN] == false){
-					vy = 0;
-			}
-			y -= 1;
-			if (shootingTimer % SHOOTINGDELAY == 0){
-				fire();
-			}
-			shootingTimer++;
-		}
-		else {
-			activeTimer++;
-			if (activeTimer == ACTIVEDELAY){
-				isActive = true;
+			if (HitBoxManager.checkOnGround(mapTileTypes, camOffset, this)){
+				vy = 0;
 			}
 		}
-
 	}
 
 	public ArrayList<Missile> getMissiles() {

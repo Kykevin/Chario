@@ -2,8 +2,9 @@ package main;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.*;
 
-import javax.sound.sampled.AudioFormat;
 import javax.swing.JFrame;
 
 import java.util.ArrayList;
@@ -13,23 +14,25 @@ import javax.swing.JLabel;
 import javax.swing.Timer;
 
 
-
 public class MainScreen extends JPanel implements ActionListener {
 
-	private final char 
-	NORMALTOP = 'T',
-	NORMAL = 'N',
-	EXPLODING = 'E',
-	EXPLODED = 'D',
-	GAS = 'G',
-	MONSTER = 'M',
-	MUSHROOM = 'R',
-	STAR = 'S',
-	NONE = ' ';
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final char NORMALTOP = 'T';
+	private final char NORMAL = 'N';
+	private final char EXPLODING = 'E';
+	private final char EXPLODED = 'D';
+	private final char GAS = 'G';
+	private final char MONSTER = 'M';
+	private final char MUSHROOM = 'R';
+	private final char STAR = 'S';
+	private final char NONE = ' ';
 
+	private int endOffset;
 
-
-	public static final double GRAVITY = 0.13;
+	public  final static double GRAVITY = 0.13;
 
 	private final int INITCHAR_X = 100;
 	private final int INITCHAR_Y = 450;
@@ -47,41 +50,18 @@ public class MainScreen extends JPanel implements ActionListener {
 	private JLabel health = new JLabel();
 	private JLabel dieMsg = new JLabel("R.I.P.");
 
-	public MainScreen(){
+	public MainScreen(String fileName) {
 		initUI();
-		//default map
-		int column, row;
-		for(column = 0;column < 1000;++column){
-			for(row = 0; row < 12;++row){
-				if (row == 9 && column % 10 == 9){
-					mapTileTypes[row][column] = MONSTER;
-				}
-				else if (row == 11){
-					mapTileTypes[row][column] = NORMAL;
-				}
-				else if (row == 10){
-					mapTileTypes[row][column] = NORMALTOP;
-				}
-				else if (row == 9 && column % 10 == 5){
-					mapTileTypes[row][column] = STAR;
-				}
-				else if (row == 4 && column % 10 == 7){
-					mapTileTypes[row][column] = MUSHROOM;
-				}
-				else if (row == 6 && column % 10 == 5){
-					mapTileTypes[row][column] = NORMALTOP;
-				}
-				else {
-					mapTileTypes[row][column] = NONE;
-				}
-				if (row == 10 && column % 10 == 3){
-					mapTileTypes[row][column] = EXPLODING;
-				}
-				if (row == 10 && column % 10 == 8){
-					mapTileTypes[row][column] = GAS;
-				}
-				
-			}
+		try {
+			readFile(fileName);
+		}
+		catch (FileNotFoundException  e) {
+			System.out.println("Unable to open file '" + fileName + "'"); 
+			defaultMap();
+		}
+		catch (IOException e) {
+			System.out.println("Error reading file '" + fileName + "'");  
+			defaultMap();
 		}
 		initTiles();
 	}
@@ -93,8 +73,6 @@ public class MainScreen extends JPanel implements ActionListener {
 
 	private void initUI(){
 		JFrame screen = new JFrame("My Game");
-
-
 
 		screen.add(this);
 
@@ -131,6 +109,54 @@ public class MainScreen extends JPanel implements ActionListener {
 		dieMsg.setForeground(Color.white);
 	}
 
+	private void defaultMap(){
+		int row,column;
+		for(column = 0;column < 1000;++column){
+			for(row = 0; row < 12;++row){
+				if (row == 11){
+					mapTileTypes[row][column] = NORMAL;
+				}
+				else if (row == 10){
+					mapTileTypes[row][column] = NORMALTOP;
+				}
+				else {
+					mapTileTypes[row][column] = NONE;
+				}
+			}
+		}
+		endOffset = 45000;
+		this.character.endOffset = endOffset;
+	}
+
+	private void readFile(String fileName) throws IOException,FileNotFoundException {
+		int column = 0, row = 0;
+		//		System.out.println("map file path: " + fileName);
+		FileReader fileReader = new FileReader(fileName);
+		BufferedReader bufferedReader = new BufferedReader(fileReader);
+		while(true){
+			String line = bufferedReader.readLine();
+			//			System.out.println(line);
+			// no more lines to read
+			if (line == null) {
+				bufferedReader.close();
+				break;
+			}
+			if (line.startsWith("#")) {
+				continue;
+			}
+			else {
+				char charList[] = line.toCharArray();
+				for (column = 0; column < charList.length; column++) {
+					mapTileTypes[row][column] = charList[column];
+				}
+				row++;
+				endOffset = column * 50 - 800;
+				this.character.endOffset = endOffset;
+			}
+		}
+		bufferedReader.close();
+	}
+
 	private void initTiles(){
 		mapTiles = new ArrayList<Tile>();
 		monsters = new ArrayList<Monster>();
@@ -141,7 +167,7 @@ public class MainScreen extends JPanel implements ActionListener {
 				mapTileDrawed[row][column] = true;
 				if (mapTileTypes[row][column] == MONSTER) {
 					Monster tempMonster = new Monster(column * 50,
-							row * 50,character.x);
+							row * 50);
 					mapTileTypes[row][column] = NONE;
 					monsters.add(tempMonster);
 				}
@@ -203,7 +229,6 @@ public class MainScreen extends JPanel implements ActionListener {
 		}
 
 	}
-
 	public void actionPerformed(ActionEvent e) {
 		checkHits();
 
@@ -232,7 +257,8 @@ public class MainScreen extends JPanel implements ActionListener {
 		}
 
 		//monster shoot char
-		for (Monster currMonster : monsters){
+		for (int i = 0; i < monsters.size(); i++){
+			Monster currMonster = monsters.get(i);
 			if (character.invulnerableTimer == 0){
 				ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
 				for (Missile currMissile : monsterMissiles) {
@@ -250,6 +276,7 @@ public class MainScreen extends JPanel implements ActionListener {
 								SoundPlayer.getInstance().play("charDie");
 								died = true;
 								this.add(dieMsg);
+								this.timer.stop();
 							}
 						}
 					}
@@ -257,23 +284,33 @@ public class MainScreen extends JPanel implements ActionListener {
 			}			
 			//char hit monster
 			if(HitBoxManager.checkHitBetween(currMonster, character)){
-				//Char.die();
+				if (character.invulnerableTimer > 0)
+				{
+					monsters.remove(i);
+					//play monster die sound
+					character.health += 10;
+					SoundPlayer.getInstance().play("monsDie");
+				}
 
-				character.health = 0;
+				else {
+					//Char.die();
+					character.health = 0;
 
-				//play char died sound.
-				if (died == false){
-					SoundPlayer.getInstance().play("charDie");
-					died = true;
-					this.add(dieMsg);
-				}			
+					//play char died sound.
+					if (died == false){
+						SoundPlayer.getInstance().play("charDie");
+						died = true;
+						this.add(dieMsg);
+						this.timer.stop();
+					}
+				}
 			}
 		}
-		for (int i = 0; i < powerUps.size(); i++){
-			PowerUp currPowerUp = powerUps.get(i); 
+		for (int j = 0; j < powerUps.size(); j++){
+			PowerUp currPowerUp = powerUps.get(j); 
 			if (HitBoxManager.checkHitBetween(currPowerUp, character)){
 				currPowerUp.vis = false;
-				powerUps.remove(i);
+				powerUps.remove(j);
 				if(currPowerUp.powerUpType == MUSHROOM){
 					character.health +=5;
 					SoundPlayer.getInstance().play("mush");
@@ -305,21 +342,28 @@ public class MainScreen extends JPanel implements ActionListener {
 					SoundPlayer.getInstance().play("charDie");
 					died = true;
 					this.add(dieMsg);
+					this.timer.stop();
+					
 				}
 			}
 		}
 		if(mapTileTypes[down][right] == EXPLODING){
 			mapTileTypes[down][right] = EXPLODED;
-			if (died == false){
-				SoundPlayer.getInstance().play("charShot");
+			if (character.invulnerableTimer > 0){
+				SoundPlayer.getInstance().play("monsShoot");
 			}
-			character.health -= 10;
-			if (character.health <= 0) {
-				character.health = 0;
+			else{
 				if (died == false){
-					SoundPlayer.getInstance().play("charDie");
-					died = true;
-					this.add(dieMsg);
+					SoundPlayer.getInstance().play("charShot");
+				}
+				character.health -= 10;
+				if (character.health <= 0) {
+					character.health = 0;
+					if (died == false){
+						SoundPlayer.getInstance().play("charDie");
+						died = true;
+						this.add(dieMsg);
+					}
 				}
 			}
 		}	
@@ -371,7 +415,7 @@ public class MainScreen extends JPanel implements ActionListener {
 						mapTileDrawed[row][column] = true;
 						if (mapTileTypes[row][column] == MONSTER) {
 							Monster tempMonster = new Monster(column * 50,
-									row * 50,character.x);
+									row * 50);
 							mapTileTypes[row][column] = NONE;
 							monsters.add(tempMonster);
 						}
@@ -399,9 +443,7 @@ public class MainScreen extends JPanel implements ActionListener {
 
 		for (Monster currMonster : monsters){
 			currMonster.camOffset = camOffset;
-			if (currMonster.x - character.x < 450){
-				currMonster.move(mapTileTypes,character.x);
-			}
+			currMonster.move(mapTileTypes,character.x);
 
 			ArrayList<Missile> monsterMissiles = currMonster.getMissiles();
 			for (int j = 0; j < monsterMissiles.size(); j++) {
@@ -442,8 +484,10 @@ public class MainScreen extends JPanel implements ActionListener {
 	public static void main(final String s[]) {
 		EventQueue.invokeLater(new Runnable(){
 			public void run(){
-				MainScreen screen = new MainScreen();
+				if(s.length != 0) new MainScreen(s[0]);
+				else new MainScreen("");
 			}
 		});
 	}
 }
+

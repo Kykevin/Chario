@@ -28,11 +28,10 @@ public class Char extends Sprite {
 	private int stayTimer = 0;
 	public int health = 20;
 	private final int HEALTHCAP = 40; 
-
+	public int endOffset;
 
 	public Char(int x, int y) {
 		super(x, y);
-
 		initChar();
 	}
 
@@ -47,6 +46,7 @@ public class Char extends Sprite {
 		if (health >= HEALTHCAP){
 			health = HEALTHCAP;
 		}
+//		System.out.println(onGround);
 		if (health != 0){
 
 			if(invulnerableTimer > 0){
@@ -57,10 +57,12 @@ public class Char extends Sprite {
 			}
 			else{
 				if(shooting){
-					if (shootingTimer % (SHOOTINGDELAY * 10 + ONESEC) % SHOOTINGDELAY
-							== 0 &&	shootingTimer % (SHOOTINGDELAY * 10 + ONESEC)
-							< SHOOTINGDELAY * 10){
+					if (shootingTimer % SHOOTINGDELAY == 0)	{
 						fire();
+						if(shootingTimer == SHOOTINGDELAY * 10){
+							gasTimer = 100;
+							shootingTimer = 0;
+						}
 					}
 					shootingTimer++;
 				}
@@ -71,13 +73,13 @@ public class Char extends Sprite {
 				motionTimer = 0;
 			}
 			else {
-
 				motionTimer++;
-				stayTimer = 0;			}
+				stayTimer = 0;
+			}
 			if ((stayTimer+1) % 100 == 0){
 				health += 5;
 			}
-			if ((motionTimer+1) % 19 == 0){
+			if ((motionTimer+1) % 20 == 0){
 				health += 1;
 			}
 			if (health >= HEALTHCAP){
@@ -108,12 +110,10 @@ public class Char extends Sprite {
 			}
 
 			vy += MainScreen.GRAVITY;
-			int t = y;
 			y += vy;
 			pos = HitBoxManager.checkPosition(mapTileTypes, camOffset, this);
 			if(pos[HitBoxManager.DOWN] == false){
 				y = y/50*50;
-				onGround = true;
 				if(jumping){
 					vy = -6.8;
 				}
@@ -127,9 +127,7 @@ public class Char extends Sprite {
 					gasTimer = 100;
 				}			
 			}
-			else {
-				onGround = false;
-			}
+			onGround = HitBoxManager.checkOnGround(mapTileTypes, camOffset, this);
 			if(pos[HitBoxManager.UP] == false){
 				if (y < 0){
 					y = 0;
@@ -146,6 +144,9 @@ public class Char extends Sprite {
 			}
 			if (x - camOffset > 250 && righting){
 				this.camOffset += vx;
+				if(this.camOffset > this.endOffset){
+					this.camOffset = this.endOffset;
+				}
 			}
 		}
 	}

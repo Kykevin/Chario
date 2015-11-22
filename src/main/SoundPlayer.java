@@ -6,8 +6,8 @@ import javax.sound.sampled.*;
 import java.io.*;
 
 public class SoundPlayer {
-	private static final AudioFormat PLAYBACK_FORMAT =
-			new AudioFormat(44100, 16, 1, true, false);
+//	private static final AudioFormat PLAYBACK_FORMAT =
+//			new AudioFormat(44100, 16, 1, true, false);
 
 	private File charShoot = new File("sounds/charShoot.wav");
 	private File charDie = new File("sounds/charDie.wav");

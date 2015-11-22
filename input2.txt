@@ -1,0 +1,25 @@
+# Map file for tile-based game
+# There are 12 lines in total
+# You have to have blocks on the last row
+# (Lines that start with '#' are comments)
+# The tiles are:
+#   (Space) Empty tile
+#   T       NormalTop (normal tile with grass on top
+#   N       Normal
+#   E       Exploding block
+#   G       Gas
+#   M       Monster
+#   R       Mushroom
+#   S       Star
+                                                                 S
+                                                                 S
+             T                                                   S
+                                                                 S
+           T                 T                                   S
+       R                                                         S
+      S                         TT             R                 S
+         T                                                       S
+    T    N        M              M                               S
+  S S S SMS S S SM          E         M                          S
+TTTTTTETGTTETTGTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+GNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNGNNNNG
